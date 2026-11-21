@@ -8,7 +8,7 @@ network availability, runtime compatibility, and supply-chain provenance.
 | --- | --- |
 | Bazel | `.bazelversion` pins 7.6.1; install a verified Bazel/Bazelisk binary. The README's latest Bazelisk URL is not itself a pinned bootstrap artifact. |
 | C++ | LLVM archive and Debian sysroots have checksums. Host glibc must still run LLVM; produced binaries dynamically use the target's libc/libstdc++. |
-| Sysroot tracking | toolchains_llvm 1.13.0 deliberately exposes the sysroot as a source directory for performance. Bazel warns that directory dependency checking is unsound. Never mutate extracted sysroots; a stronger guarantee requires a toolchain rule that declares individual files or proper tree artifacts and validation of cache invalidation. |
+| Sysroot tracking | A local patch to toolchains_llvm 1.13.0 declares individual sysroot files, so Bazel tracks file content in action inputs instead of an opaque directory. Both workspaces apply the patch. Systemd service definitions are excluded because they are not build inputs and contain a filename Bazel cannot represent as a label. |
 | Python | rules_python resolves a downloaded 3.12 runtime through the module lock; NumPy wheels are versioned and hashed. This is not system Python. |
 | Rust | rules_rust pins 1.85.1. PyO3's transitive crate graph has a separate checked-in lock. ABI3 plus PYO3_NO_PYTHON avoids ambient Python discovery. |
 | JavaScript | rules_nodejs pins Node 22.14.0. Future npm dependencies need a committed lock and declared Bazel targets. |

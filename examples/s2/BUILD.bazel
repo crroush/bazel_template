@@ -1,6 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
-exports_files(["s2-bit-width.patch"])
+exports_files(["s2-bit-width.patch", "sysroot-files.patch"])
 
 platform(
     name = "linux_arm64",
