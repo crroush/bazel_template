@@ -13,6 +13,7 @@ bazel_dep(name = "rules_python", version = "1.5.0")
 bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 bazel_dep(name = "rules_rust", version = "0.61.0")
 bazel_dep(name = "aspect_rules_js", version = "2.4.2")
+bazel_dep(name = "aspect_bazel_lib", version = "2.19.3")
 bazel_dep(name = "rules_nodejs", version = "6.5.2")
 bazel_dep(name = "toolchains_llvm", version = "1.13.0")
 
@@ -89,3 +90,14 @@ llvm.sysroot(
 use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
 
 register_toolchains("@llvm_toolchain//:all")
+
+# abi3 avoids probing an ambient Python installation during Rust compilation.
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.spec(package = "pyo3", version = "=0.23.5", features = ["extension-module", "abi3-py312"])
+crate.annotation(crate = "pyo3-build-config", build_script_env = {"PYO3_NO_PYTHON": "1"})
+crate.from_specs(
+    lockfile = "//examples/pyo3:Cargo.Bazel.lock",
+    cargo_lockfile = "//examples/pyo3:Cargo.lock",
+    supported_platform_triples = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
+)
+use_repo(crate, "crates")

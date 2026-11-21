@@ -1,0 +1,39 @@
+load("@rules_rust//rust:defs.bzl", "rust_shared_library")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
+
+exports_files(["Cargo.Bazel.lock", "Cargo.lock"])
+
+rust_shared_library(
+    name = "rust_greeting",
+    crate_name = "_rust_greeting",
+    crate_root = "lib.rs",
+    srcs = ["lib.rs"],
+    edition = "2021",
+    deps = ["@crates//:pyo3"],
+)
+
+copy_file(
+    name = "extension",
+    src = ":rust_greeting",
+    out = "_rust_greeting.so",
+)
+
+py_library(
+    name = "greeting",
+    srcs = ["greeting.py"],
+    data = [":extension"],
+)
+
+py_binary(
+    name = "hello",
+    srcs = ["hello.py"],
+    deps = [":greeting"],
+)
+
+py_test(
+    name = "hello_test",
+    srcs = ["hello_test.py"],
+    size = "small",
+    deps = [":greeting"],
+)

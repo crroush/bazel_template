@@ -1,6 +1,6 @@
 # Bazel polyglot template
 
-Build and test C++20, Python with pybind11, Rust, and JavaScript on Linux
+Build and test C++20, Python with pybind11 and PyO3, Rust, and JavaScript on Linux
 x86-64 and ARM64. The workspace pins Bazel 7.6.1, Clang 23.1.6, CPython 3.12,
 Rust 1.85.1, and Node.js 22.14.0.
 
@@ -115,6 +115,16 @@ The [Python guide](examples/python/README.md) covers installing the wheel,
 adding PyPI dependencies, generating hashes with `pip-compile`, and reviewing
 both lockfiles.
 
+## Python and Rust bindings
+
+The [PyO3 example](examples/pyo3/README.md) builds a Rust extension with a
+pinned crate graph and imports it using the Bazel Python runtime.
+
+```bash
+bazel test //examples/pyo3:hello_test
+bazel run //examples/pyo3:hello
+```
+
 ## Rust
 
 `examples/rust/BUILD.bazel` uses `rust_binary` to compile `main.rs` and
@@ -202,3 +212,10 @@ Put optional machine-specific settings in the ignored `.bazelrc.local`.
 build --disk_cache=~/.cache/bazel/polyglot-template
 build --experimental_disk_cache_gc_max_size=10G
 ```
+
+## Hermetic builds and team caches
+
+Read the [hermeticity review](docs/hermeticity.md) for the supported host boundary
+and remaining reproducibility constraints. The [remote cache guide](docs/remote-cache.md)
+shows how trusted CI publishes results and developers reuse them, including
+authentication, matching configurations, and a fresh-output-base cache-hit check.
