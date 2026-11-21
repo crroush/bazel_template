@@ -1,0 +1,6 @@
+common --enable_bzlmod
+test --test_output=errors
+build:release --compilation_mode=opt
+build:arm64 --platforms=//:linux_arm64
+# Abseil 20240722.0 still selects CPU flags using this legacy setting.
+build:arm64 --cpu=aarch64

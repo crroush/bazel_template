@@ -1,0 +1,69 @@
+module(
+    name = "s2_example",
+    bazel_compatibility = [
+        ">=7.6.1",
+        "<8.0.0",
+    ],
+)
+
+bazel_dep(name = "abseil-cpp", version = "20240722.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "s2geometry", version = "0.12.0")
+bazel_dep(name = "toolchains_llvm", version = "1.13.0")
+
+archive_override(
+    module_name = "s2geometry",
+    integrity = "sha256-wJ7HUcMEOWWg1EHgRqc8RWyZXmBjQ5pyKQ9mHBBU1hE=",
+    patch_strip = 1,
+    patches = ["//:s2-bit-width.patch"],
+    strip_prefix = "s2geometry-0.12.0/src",
+    urls = ["https://github.com/google/s2geometry/archive/refs/tags/v0.12.0.tar.gz"],
+)
+
+archive_override(
+    module_name = "abseil-cpp",
+    integrity = "sha256-9Q5awxGoE4Laf6dblzEOS5AGR0+VYKxG9UqZZ/B9SuM=",
+    strip_prefix = "abseil-cpp-20240722.0",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20240722.0.tar.gz"],
+)
+
+# Chromium's Debian Bullseye sysroots pin target headers, libc, and libstdc++.
+sysroot = use_repo_rule("@toolchains_llvm//toolchain:sysroot.bzl", "sysroot")
+
+sysroot(
+    name = "linux_x86_64_sysroot",
+    sha256 = "f851add76bdae472fb6c94b4f920bc4a132d85ac607951391297f636af7e934e",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/f851add76bdae472fb6c94b4f920bc4a132d85ac607951391297f636af7e934e"],
+)
+
+sysroot(
+    name = "linux_arm64_sysroot",
+    sha256 = "278c36fe3a785d7f89fbe3f46956899a3bd49fe665f68dc667d6f626a951fcd6",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/278c36fe3a785d7f89fbe3f46956899a3bd49fe665f68dc667d6f626a951fcd6"],
+)
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    name = "llvm_toolchain",
+    cxx_standard = {"": "c++20"},
+    extra_llvm_distributions = {
+        "LLVM-23.1.6-Linux-ARM64.tar.xz": "e9daa167da28b9e31d30046f05f98e3e7da3647cdbe1c1863e8b223c07ccf291",
+        "LLVM-23.1.6-Linux-X64.tar.xz": "bd4d1c434ff69ef06d19e7934c04708da677e5f2eb51f5bcf052ab91818f0094",
+    },
+    llvm_version = "23.1.6",
+    stdlib = {"": "dynamic-stdc++"},
+)
+llvm.sysroot(
+    name = "llvm_toolchain",
+    label = "@linux_x86_64_sysroot//sysroot",
+    targets = ["linux-x86_64"],
+)
+llvm.sysroot(
+    name = "llvm_toolchain",
+    label = "@linux_arm64_sysroot//sysroot",
+    targets = ["linux-aarch64"],
+)
+use_repo(llvm, "llvm_toolchain")
+
+register_toolchains("@llvm_toolchain//:all")

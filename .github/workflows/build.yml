@@ -1,0 +1,47 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+      - name: Build all examples
+        run: bazel build //...
+      - name: Test native examples
+        run: bazel test --config=strict //...
+      - name: Install HTML coverage tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+      - name: Check C++ memory and undefined behavior
+        run: bazel test --config=asan --config=ubsan //examples/cpp:hello_test
+      - name: Collect and validate coverage
+        run: |
+          bazel coverage //...
+          python3 tools/coverage/check.py bazel-out/_coverage/_coverage_report.dat
+          genhtml bazel-out/_coverage/_coverage_report.dat --output-directory coverage-html
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          if-no-files-found: error
+          path: |
+            bazel-out/_coverage/_coverage_report.dat
+            coverage-html/
+      - name: Cross-compile ARM64 examples
+        run: |
+          bazel build --config=arm64 --config=release //examples/cpp:hello //examples/rust:hello
+          file bazel-bin/examples/cpp/hello | grep -q 'ARM aarch64'
+          file bazel-bin/examples/rust/hello | grep -q 'ARM aarch64'

@@ -1,0 +1,2 @@
+# This example has its own MODULE.bazel and toolchain settings.
+examples/s2

@@ -1,0 +1,22 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "greeting",
+    srcs = ["greeting.cc"],
+    hdrs = ["greeting.h"],
+    linkstatic = True,
+    visibility = ["//examples/python:__pkg__"],
+)
+
+cc_binary(
+    name = "hello",
+    srcs = ["main.cc"],
+    deps = [":greeting"],
+)
+
+cc_test(
+    name = "hello_test",
+    size = "small",
+    srcs = ["greeting_test.cc"],
+    deps = [":greeting"],
+)

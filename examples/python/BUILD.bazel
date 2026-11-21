@@ -1,0 +1,68 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+pybind_extension(
+    name = "_greeting",
+    srcs = ["bindings.cc"],
+    deps = ["//examples/cpp:greeting"],
+)
+
+py_library(
+    name = "greeting",
+    srcs = ["greeting.py"],
+    data = [":_greeting"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "hello",
+    srcs = ["hello.py"],
+    deps = [":greeting"],
+)
+
+py_test(
+    name = "hello_test",
+    size = "small",
+    srcs = ["hello_test.py"],
+    deps = [":greeting"],
+)
+
+# An unset version uses the default CPython 3.12 toolchain in MODULE.bazel.
+config_setting(
+    name = "default_python_version",
+    flag_values = {"@rules_python//python/config_settings:python_version": ""},
+)
+
+# Package the wrapper and extension directly into the platform install scheme.
+py_wheel(
+    name = "wheel",
+    abi = "cp312",
+    data_files = {
+        ":greeting.py": "platlib/bazel_template_greeting/__init__.py",
+        ":_greeting": "platlib/bazel_template_greeting/_greeting.so",
+    },
+    description_file = "README.md",
+    distribution = "bazel-template-greeting",
+    platform = select(
+        {
+            "@platforms//cpu:aarch64": "linux_aarch64",
+            "@platforms//cpu:x86_64": "linux_x86_64",
+        },
+        no_match_error = "The greeting wheel supports Linux x86-64 and ARM64.",
+    ),
+    python_requires = ">=3.12,<3.13",
+    python_tag = select(
+        {
+            ":default_python_version": "cp312",
+            "@rules_python//python/config_settings:is_python_3.12": "cp312",
+        },
+        no_match_error = "Build the greeting wheel with CPython 3.12.",
+    ),
+    requires_file = "requirements.in",
+    stamp = 0,
+    summary = "A C++ greeting exposed to Python with pybind11",
+    target_compatible_with = ["@platforms//os:linux"],
+    twine_binary = None,
+    version = "0.2.0",
+)

@@ -1,0 +1,11 @@
+/bazel-*
+/examples/s2/bazel-*
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+/compile_commands.json
+/.cache/
+/external
+/.bazelrc.local
+/coverage-html/

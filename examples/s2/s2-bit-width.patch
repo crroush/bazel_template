@@ -1,0 +1,5 @@
+--- a/s2/s2cell_id.cc
++++ b/s2/s2cell_id.cc
+@@ -207 +207 @@
+-  return max(61 - absl::bit_width(bits), -1) >> 1;
++  return max(61 - static_cast<int>(absl::bit_width(bits)), -1) >> 1;

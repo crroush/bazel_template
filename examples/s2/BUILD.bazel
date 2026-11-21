@@ -1,0 +1,22 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+exports_files(["s2-bit-width.patch"])
+
+platform(
+    name = "linux_arm64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+cc_test(
+    name = "geometry_test",
+    size = "small",
+    srcs = ["geometry_test.cc"],
+    linkstatic = True,
+    deps = [
+        "@abseil-cpp//absl/strings",
+        "@s2geometry//:s2",
+    ],
+)

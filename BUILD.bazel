@@ -1,0 +1,2 @@
+# Each language keeps its own build definitions under examples/.
+exports_files(["README.md"])
