@@ -9,7 +9,15 @@ permissions:
 
 jobs:
   linux:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
     steps:
       - uses: actions/checkout@v4
       - uses: bazel-contrib/setup-bazel@0.15.0
@@ -20,21 +28,49 @@ jobs:
       - name: Build all examples
         run: bazel build --lockfile_mode=error //...
       - name: Build CUDA example (no GPU required)
+        if: matrix.arch == 'x86_64'
         run: bazel build --lockfile_mode=error --config=cuda //examples/cuda:vector_add //examples/cuda:vector_add_test
       - name: Test native examples
         run: bazel test --lockfile_mode=error --config=strict //...
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and smoke-test the Python wheel
+        env:
+          WHEEL_ARCH: ${{ matrix.arch }}
+        run: |
+          bazel build --lockfile_mode=error --config=release //examples/python:wheel
+          shopt -s nullglob
+          wheels=(bazel-bin/examples/python/*-cp312-cp312-linux_"$WHEEL_ARCH".whl)
+          test "${#wheels[@]}" -eq 1
+          wheel_venv=$(mktemp -d "$RUNNER_TEMP/wheel-venv.XXXXXX")
+          python -m venv "$wheel_venv"
+          "$wheel_venv/bin/python" -m pip install "${wheels[0]}"
+          "$wheel_venv/bin/python" -I - <<'PYTHON'
+          import numpy as np
+          from bazel_template_greeting import greet, greet_many
+
+          assert greet("CI") == "Hello, CI from C++!"
+          assert greet_many(np.array([["Bazel", "ARM"]])).tolist() == [
+              ["Hello, Bazel from C++!", "Hello, ARM from C++!"]
+          ]
+          PYTHON
       - name: Install HTML coverage tools
+        if: matrix.arch == 'x86_64'
         run: |
           sudo apt-get update
           sudo apt-get install -y lcov
       - name: Check C++ memory and undefined behavior
+        if: matrix.arch == 'x86_64'
         run: bazel test --lockfile_mode=error --config=asan --config=ubsan //examples/cpp:hello_test
       - name: Collect and validate coverage
+        if: matrix.arch == 'x86_64'
         run: |
           bazel coverage --lockfile_mode=error //...
           python3 tools/coverage/check.py bazel-out/_coverage/_coverage_report.dat
           genhtml bazel-out/_coverage/_coverage_report.dat --output-directory coverage-html
       - name: Upload coverage reports
+        if: matrix.arch == 'x86_64'
         uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -43,7 +79,22 @@ jobs:
             bazel-out/_coverage/_coverage_report.dat
             coverage-html/
       - name: Cross-compile ARM64 examples
+        if: matrix.arch == 'x86_64'
         run: |
           bazel build --lockfile_mode=error --config=arm64 --config=release //examples/cpp:hello //examples/rust:hello
           file bazel-bin/examples/cpp/hello | grep -q 'ARM aarch64'
           file bazel-bin/examples/rust/hello | grep -q 'ARM aarch64'
+
+  s2:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.15.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+          module-root: examples/s2
+      - name: Test the standalone S2 workspace
+        working-directory: examples/s2
+        run: bazel test //:geometry_test
