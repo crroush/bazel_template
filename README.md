@@ -1,7 +1,7 @@
 # Bazel polyglot template
 
 C++20, Rust, JavaScript, and Python bindings to C++ (pybind11) and Rust (PyO3).
-Targets Linux x86-64 and ARM64.
+Targets Linux x86-64 and ARM64, with an optional NVIDIA CUDA example for x86-64.
 
 Pinned tools: Bazel 7.6.1, Clang 23.1.6, CPython 3.12, Rust 1.85.1,
 and Node.js 22.14.0.
@@ -57,6 +57,18 @@ bazel test --nocache_test_results --test_output=all //examples/pyo3:hello_test
 The PyO3 demo prints `Hello, world from Rust!`. Its tests cover greetings,
 Unicode, and invalid argument types using Bazel's Python runtime—no local
 virtual environment or pip install needed.
+
+## NVIDIA CUDA
+
+```bash
+bazel build --config=cuda //examples/cuda:vector_add
+bazel run --config=cuda //examples/cuda:vector_add
+bazel test --config=cuda --test_output=all //examples/cuda:vector_add_test
+```
+
+Building needs no GPU; running needs an NVIDIA GPU with compute capability 8.0+
+and a CUDA 12.8-compatible driver. CUDA targets are excluded from root `//...`.
+See [CUDA setup](examples/cuda/README.md) for requirements and toolchain details.
 
 ## Additional checks
 

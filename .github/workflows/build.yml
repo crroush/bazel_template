@@ -19,6 +19,8 @@ jobs:
           repository-cache: true
       - name: Build all examples
         run: bazel build --lockfile_mode=error //...
+      - name: Build CUDA example (no GPU required)
+        run: bazel build --lockfile_mode=error --config=cuda //examples/cuda:vector_add //examples/cuda:vector_add_test
       - name: Test native examples
         run: bazel test --lockfile_mode=error --config=strict //...
       - name: Install HTML coverage tools

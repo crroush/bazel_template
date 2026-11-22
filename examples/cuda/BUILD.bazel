@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
+load("@rules_cuda//cuda:defs.bzl", "cuda_library")
+
+# Explicit targets keep GPU dependencies out of ordinary //... builds/tests.
+cuda_library(
+    name = "vector_add_lib",
+    srcs = ["vector_add.cu"],
+    tags = ["manual"],
+    target_compatible_with = ["@platforms//os:linux", "@platforms//cpu:x86_64"],
+)
+
+cc_binary(
+    name = "vector_add",
+    deps = [":vector_add_lib"],
+    tags = ["manual"],
+)
+
+cc_test(
+    name = "vector_add_test",
+    size = "small",
+    deps = [":vector_add_lib"],
+    tags = ["manual", "local", "no-cache"],
+)

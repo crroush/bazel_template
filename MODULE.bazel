@@ -109,3 +109,15 @@ crate.from_specs(
     supported_platform_triples = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
 )
 use_repo(crate, "crates")
+
+bazel_dep(name = "rules_cuda", version = "0.4.0")
+cuda = use_extension("@rules_cuda//cuda:extensions.bzl", "toolchain")
+cuda.redist_json(
+    name = "cuda_12_8_1",
+    version = "12.8.1",
+    sha256 = "249e28a83008d711d5f72880541c8be6253f6d61608461de4fcb715554a6cf17",
+    platforms = ["linux-x86_64"],
+    components = ["nvcc", "cudart", "cccl", "curand"],
+)
+cuda.toolkit(name = "cuda")
+use_repo(cuda, "cuda")

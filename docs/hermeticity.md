@@ -11,6 +11,7 @@ network availability, runtime compatibility, and supply-chain provenance.
 | Sysroot tracking | A local patch to toolchains_llvm 1.13.0 declares individual sysroot files, so Bazel tracks file content in action inputs instead of an opaque directory. Both workspaces apply the patch. Systemd service definitions are excluded because they are not build inputs and contain a filename Bazel cannot represent as a label. |
 | Python | rules_python resolves a downloaded 3.12 runtime through the module lock; NumPy wheels are versioned and hashed. This is not system Python. |
 | Rust | rules_rust pins 1.85.1. PyO3's transitive crate graph has a separate checked-in lock. ABI3 plus PYO3_NO_PYTHON avoids ambient Python discovery. |
+| CUDA | Optional Linux x86-64 example uses Clang and checksum-pinned CUDA 12.8.1 redistributables. GPU execution requires an external NVIDIA driver and compute capability 8.0+ device; neither is supplied by Bazel. GPU tests run locally without cached results. |
 | JavaScript | rules_nodejs pins Node 22.14.0. Future npm dependencies need a committed lock and declared Bazel targets. |
 | Actions | Strict action environment reduces accidental environment inputs; sandboxing is useful but not proof of total isolation. Tool scripts can still depend on host shell/utilities and the kernel. |
 | Network | Build and test sandboxes disable network by default. Repository fetching still requires network or warmed caches; explicit action requirements and unsandboxed strategies can override isolation. |
