@@ -12,6 +12,14 @@ bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "s2geometry", version = "0.12.0")
 bazel_dep(name = "toolchains_llvm", version = "1.13.0")
 
+# Track individual sysroot files instead of an opaque source directory.
+single_version_override(
+    module_name = "toolchains_llvm",
+    version = "1.13.0",
+    patches = ["//:sysroot-files.patch"],
+    patch_strip = 1,
+)
+
 archive_override(
     module_name = "s2geometry",
     integrity = "sha256-wJ7HUcMEOWWg1EHgRqc8RWyZXmBjQ5pyKQ9mHBBU1hE=",

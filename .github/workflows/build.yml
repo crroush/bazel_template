@@ -18,18 +18,20 @@ jobs:
           disk-cache: true
           repository-cache: true
       - name: Build all examples
-        run: bazel build //...
+        run: bazel build --lockfile_mode=error //...
+      - name: Build CUDA example (no GPU required)
+        run: bazel build --lockfile_mode=error --config=cuda //examples/cuda:vector_add //examples/cuda:vector_add_test
       - name: Test native examples
-        run: bazel test --config=strict //...
+        run: bazel test --lockfile_mode=error --config=strict //...
       - name: Install HTML coverage tools
         run: |
           sudo apt-get update
           sudo apt-get install -y lcov
       - name: Check C++ memory and undefined behavior
-        run: bazel test --config=asan --config=ubsan //examples/cpp:hello_test
+        run: bazel test --lockfile_mode=error --config=asan --config=ubsan //examples/cpp:hello_test
       - name: Collect and validate coverage
         run: |
-          bazel coverage //...
+          bazel coverage --lockfile_mode=error //...
           python3 tools/coverage/check.py bazel-out/_coverage/_coverage_report.dat
           genhtml bazel-out/_coverage/_coverage_report.dat --output-directory coverage-html
       - name: Upload coverage reports
@@ -42,6 +44,6 @@ jobs:
             coverage-html/
       - name: Cross-compile ARM64 examples
         run: |
-          bazel build --config=arm64 --config=release //examples/cpp:hello //examples/rust:hello
+          bazel build --lockfile_mode=error --config=arm64 --config=release //examples/cpp:hello //examples/rust:hello
           file bazel-bin/examples/cpp/hello | grep -q 'ARM aarch64'
           file bazel-bin/examples/rust/hello | grep -q 'ARM aarch64'

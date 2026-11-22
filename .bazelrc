@@ -1,7 +1,7 @@
 common --enable_bzlmod
 build --incompatible_strict_action_env
 test --test_output=errors
-test --sandbox_default_allow_network=false
+build --sandbox_default_allow_network=false
 
 # Build modes apply to all languages; additional C/C++ flags are explicit.
 build:debug --compilation_mode=dbg
@@ -44,3 +44,12 @@ build:arm64 --cpu=aarch64
 
 # Optional machine-specific caches/credentials belong here, not in Git.
 try-import %workspace%/.bazelrc.local
+
+# CUDA uses the pinned C++ toolchain, never an ambient clang from PATH.
+common --repo_env=CUDA_COMPILER_USE_CC_TOOLCHAIN=true
+build:cuda --@rules_cuda//cuda:compiler=clang
+build:cuda --@rules_cuda//cuda:archs=compute_80:sm_80,compute_80
+build:cuda --@rules_cuda//cuda:runtime=@cuda//:cuda_runtime_static
+# Split CUDA redistributables lack cuda.h at Clang's toolkit probe path.
+# Pin PTX to the 12.8 assembler's supported ISA instead of Clang's newest ISA.
+build:cuda --@rules_cuda//cuda:copts=--cuda-feature=+ptx87
