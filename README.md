@@ -6,6 +6,11 @@ Targets Linux x86-64 and ARM64, with an optional NVIDIA CUDA example for x86-64.
 Pinned tools: Bazel 7.6.1, Clang 23.1.6, CPython 3.12, Rust 1.85.1,
 and Node.js 22.14.0.
 
+## Start a new project
+
+Follow the [getting-started guide](docs/getting-started.md) to create a
+repository, add your first Bazel package and test, and adapt CI and coverage.
+
 ## Setup
 
 Use Linux with glibc 2.34+ (Ubuntu 22.04+ or RHEL 9+) and at least 20 GB free.
@@ -85,6 +90,10 @@ The coverage checker covers an explicit list of original example sources;
 it does not assert coverage of the PyO3 Rust extension. For HTML output, install
 `lcov` and run `genhtml bazel-out/_coverage/_coverage_report.dat -o coverage-html`.
 
+CI runs native tests and installs the Python wheel on Linux x86-64 and ARM64.
+The x86-64 jobs also test S2, build the CUDA demo, run sanitizer and coverage
+checks, and verify cross-compiled C++ and Rust executables.
+
 ## Release builds and ARM64
 
 Use `--config=debug`, `--config=release`, or `--config=minsize` to select a build
@@ -116,3 +125,13 @@ settings in the ignored `.bazelrc.local`.
 Sysroot files are tracked individually in both workspaces; see the
 [toolchain patch](tools/patches/README.md). Pinned toolchains do not by themselves
 make the host environment fully hermetic.
+
+## License and contributing
+
+This template is licensed under the [Mozilla Public License 2.0](LICENSE).
+It originates from the [Bazel polyglot template repository](https://github.com/crroush/bazel_template).
+Keep the license and attribution notices when redistributing covered files.
+If you distribute modified covered files, make their source available under
+MPL 2.0. If you fix or improve the template, please share the update in an
+[issue](https://github.com/crroush/bazel_template/issues) or
+[pull request](https://github.com/crroush/bazel_template/pulls).
